@@ -41,8 +41,10 @@ $(document).ready(function() {
       console.log(snap);
       if (snap.player1.userId === '') {
         alert("you are player 1")
+        database.ref("/game/player1/userId").set(userId);
       } else if (snap.player2.userId === '') {
         alert('You are player 2');
+        database.ref("/game/player2/userId").set(userId);
       } else {
         alert("you are waiting");
       }
