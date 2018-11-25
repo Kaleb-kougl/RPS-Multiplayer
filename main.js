@@ -20,8 +20,38 @@ $(document).ready(function() {
   let player = 0;
   let currentlyPlaying = false;
 
-  function startGame() {
-    // CHECK DB FOR SETUP
+  // DICTATE WHO IS PLAYING
+  function setPlayer() {
+    database.ref("/game").once('value', function(snapshot){
+      let snap = snapshot.val();
+      if (snap.player1.userId === '') {
+        alert("you are player 1")
+        player = 1;
+        database.ref("/game/player1/userId").set(userId);
+        currentlyPlaying = true;
+      } else if (snap.player2.userId === '') {
+        alert('You are player 2');
+        player = 2;
+        
+        database.ref("/game/player2/userId").set(userId);
+        currentlyPlaying = true;
+      } else if (player === 0) {
+        console.log('not a player yet');
+        let count = 0;
+        database.ref("/connections").once('value', function(snapshot){
+          for(var prop in snapshot.val()) {
+              if (snapshot.val().hasOwnProperty(prop)) {
+                ++count;
+              }
+          }
+        });
+        player = count;
+        console.log(player);
+      }
+    });
+  }
+
+  // CHECK DB FOR SETUP
   database.ref("/game").once("value", function(snapshot) {
     // check if player data exists in the database or make it
     if (snapshot.child("player1").exists() || snapshot.child("player2").exists()) {
@@ -71,7 +101,7 @@ $(document).ready(function() {
         }
         // if its just 1 make sure the userId's are cleared
         if (count === 1) {
-          database.ref("/game/player1/userId").set('');
+          database.ref("/game/player1/userId").set(userId);
           database.ref("/game/player2/userId").set('');
         }
       });
@@ -85,14 +115,13 @@ $(document).ready(function() {
       setPlayer();
     }
   });
+  function startGame() {
 
   connectionsRef.on('child_removed', function(snapshot) {
     console.log("someone killed a child");
     console.log(snapshot['ref_'].key);
     if (player > 2) {
       player--;
-      // alert(`now waiting for ${player}`)
-      console.log(player);
     }
     let lostConnectionId = snapshot['ref_'].key;
     database.ref("/game").once('value', function(snapshot){
@@ -108,37 +137,6 @@ $(document).ready(function() {
     setPlayer();
    };
   });
-
-  // DICTATE WHO IS PLAYING
-  function setPlayer() {
-    console.log('set player called');
-    database.ref("/game").once('value', function(snapshot){
-      let snap = snapshot.val();
-      if (snap.player1.userId === '') {
-        alert("you are player 1")
-        player = 1;
-        database.ref("/game/player1/userId").set(userId);
-        currentlyPlaying = true;
-      } else if (snap.player2.userId === '') {
-        alert('You are player 2');
-        player = 2;
-        database.ref("/game/player2/userId").set(userId);
-        currentlyPlaying = true;
-      } else if (player === 0) {
-        console.log('not a player yet');
-        let count = 0;
-        database.ref("/connections").once('value', function(snapshot){
-          for(var prop in snapshot.val()) {
-              if (snapshot.val().hasOwnProperty(prop)) {
-                ++count;
-              }
-          }
-        });
-        player = count;
-        console.log(player);
-      }
-    });
-  }
 
   // initial values
   let name = "player";
