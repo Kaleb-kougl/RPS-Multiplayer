@@ -24,7 +24,8 @@ $(document).ready(function() {
   function setPlayer() {
     database.ref("/game").once('value', function(snapshot){
       let snap = snapshot.val();
-      if (snap.player1.userId === '') {
+      console.log(snap.player1.userId)
+      if (snap.player1.userId === userId) {
         alert("you are player 1")
         player = 1;
         database.ref("/game/player1/userId").set(userId);
@@ -32,7 +33,6 @@ $(document).ready(function() {
       } else if (snap.player2.userId === '') {
         alert('You are player 2');
         player = 2;
-        
         database.ref("/game/player2/userId").set(userId);
         currentlyPlaying = true;
       } else if (player === 0) {
@@ -46,8 +46,8 @@ $(document).ready(function() {
           }
         });
         player = count;
-        console.log(player);
       }
+      console.log(player);
     });
   }
 
@@ -102,7 +102,8 @@ $(document).ready(function() {
         // if its just 1 make sure the userId's are cleared
         if (count === 1) {
           database.ref("/game/player1/userId").set(userId);
-          database.ref("/game/player2/userId").set('');
+          database.ref("/game/player2/userId").set('')
+          .then(setPlayer())
         }
       });
       // Add user to the connections list.
@@ -111,8 +112,6 @@ $(document).ready(function() {
       con.onDisconnect();
       // Remove user from the connection list when they disconnect.
       con.onDisconnect().remove();
-      // call function to set player
-      setPlayer();
     }
   });
   function startGame() {
@@ -168,7 +167,7 @@ $(document).ready(function() {
     $('#c-0-1').html(`<h1>Your Move!</h1>`);
     $('#c-1-0').html(`<button class='btn btn-primary game-choice' data-choice='rock'>Rock</button>`);
     $('#c-1-1').html(`<button class='btn btn-primary game-choice' data-choice='paper'>Paper</button>`);
-    $('#c-1-2').html(`<button class='btn btn-primary game-choice' data-choice='paper'>Scissors</button>`);
+    $('#c-1-2').html(`<button class='btn btn-primary game-choice' data-choice='scissors'>Scissors</button>`);
   }
 
   // on submit set the inital values
@@ -179,10 +178,13 @@ $(document).ready(function() {
   });
 
   $(document).on('click', '.game-choice', function(event) {
-    $('#c-0-1').text($(this).attr('data-choice'));
+    let choice = $(this).attr('data-choice');
     database.ref("/game").once('value', function(snapshot){
       let snap = snapshot.val();
-      console.log(snap);
+      if (currentlyPlaying) {
+        console.log(player);
+        database.ref("/game/player1/userId").set(choice);
+      }
     });
   });
 
