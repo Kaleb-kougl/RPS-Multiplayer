@@ -66,7 +66,7 @@ $(document).ready(function() {
         database.ref("/game/player2/userId").set('');
       }
     });
-  // set player2 to player 1
+  // when a player leaves assign someone from queue
    if (player <= 2 && currentlyPlaying === false) {
     setPlayer();
    };
