@@ -20,6 +20,26 @@ $(document).ready(function() {
   let player = 0;
   let currentlyPlaying = false;
 
+  function startGame() {
+    // CHECK DB FOR SETUP
+  database.ref("/game").once("value", function(snapshot) {
+    // check if player data exists in the database or make it
+    if (snapshot.child("player1").exists() || snapshot.child("player2").exists()) {
+    } else {
+      database.ref("/game").push({
+        "player1": {
+          name: name,
+          move: move,
+          userId: ''
+        },
+        "player2": {
+          name: name,
+          move: move,
+          userId: ''
+        }
+      });
+    }
+  });
   // PLAYER CONNECTIONS
   connectedRef.on("value", function(snap) {
     if (snap.val()) {
@@ -37,7 +57,6 @@ $(document).ready(function() {
           database.ref("/game/player2/userId").set('');
         }
       });
-
       // Add user to the connections list.
       var con = connectionsRef.push(true);
       userId = con.key;
@@ -105,44 +124,42 @@ $(document).ready(function() {
 
   // initial values
   let name = "player";
-  let move = "rock";
+  let move = "";
 
-  // CHECK DB FOR SETUP
-  database.ref("/game").on("value", function(snapshot) {
-    // check if player data exists in the database or make it
-    if (snapshot.child("player1").exists() || snapshot.child("player2").exists()) {
+  
+  }
 
-    } else {
-      database.ref("/game").push({
-        "player1": {
-          name: name,
-          move: move,
-          userId: ''
-        },
-        "player2": {
-          name: name,
-          move: move,
-          userId: ''
+  function setUpGameScreen() {
+    $('body').empty();
+    let screen = $('<article>');
+    screen.attr('class', 'container-fluid');
+    screen.attr('class', 'game-screen');
+    for (let i = 0; i < 3; i++) {
+      let row = $('<div>');
+      row.attr('class', 'row');
+      row.attr('id', `r-${i}`);
+      if (i < 2) {
+        for (let j = 0; j < 3; j++) {
+          let col = $('<div>');
+          col.attr('class', 'col-4');
+          col.attr('id', `c-${i}-${j}`);
+          row.append(col);
         }
-      });
+      }
+      screen.append(row);
     }
-  });
-
+    $('body').append(screen);
+    $('#c-0-1').html(`<h1>Your Move!</h1>`);
+    $('#c-1-0').html(`<button class='btn btn-primary'>Rock</button>`);
+    $('#c-1-1').html(`<button class='btn btn-primary'>Paper</button>`);
+    $('#c-1-2').html(`<button class='btn btn-primary'>Scissors</button>`);
+  }
 
   // on submit set the inital values
   // needs to be changed to get player choice then set value in database
-  $("#submit-choice").on("click", function(event) {
-    database.ref("/game").set({
-      "player1": {
-        name: name,
-        move: move,
-        userId: ''
-      },
-      "player2": {
-        name: name,
-        move: move,
-        userId: ''
-      }
-    });
+  $("#start-game").on("click", function(event) {
+    startGame();
+    setUpGameScreen();
   });
+
 });
