@@ -25,16 +25,34 @@ $(document).ready(function() {
   database.ref("/game").once("value", function(snapshot) {
     // check if player data exists in the database or make it
     if (snapshot.child("player1").exists() || snapshot.child("player2").exists()) {
+      if(!snapshot.child("player1").child('userId').exists()){
+        database.ref('/game/player1/userId').set('');
+      }
+      if(!snapshot.child('player2').child('userId').exists()) {
+        database.ref('/game/player2/userId').set('');
+      }
+      if(!snapshot.child('player1').child('name').exists()){
+        database.ref('/game/player1/name').set('');
+      }
+      if(!snapshot.child('player2').child('name').exists()){
+        database.ref('/game/player2/name').set('');
+      }
+      if(!snapshot.child('player1').child('move').exists()){
+        database.ref('/game/player1/move').set('');
+      }
+      if(!snapshot.child('player2').child('move').exists()){
+        database.ref('/game/player2/move').set('');
+      }
     } else {
-      database.ref("/game").push({
+      database.ref("/game").set({
         "player1": {
-          name: name,
-          move: move,
+          name: '',
+          move: '',
           userId: ''
         },
         "player2": {
-          name: name,
-          move: move,
+          name: '',
+          move: '',
           userId: ''
         }
       });
@@ -150,9 +168,9 @@ $(document).ready(function() {
     }
     $('body').append(screen);
     $('#c-0-1').html(`<h1>Your Move!</h1>`);
-    $('#c-1-0').html(`<button class='btn btn-primary'>Rock</button>`);
-    $('#c-1-1').html(`<button class='btn btn-primary'>Paper</button>`);
-    $('#c-1-2').html(`<button class='btn btn-primary'>Scissors</button>`);
+    $('#c-1-0').html(`<button class='btn btn-primary game-choice' data-choice='rock'>Rock</button>`);
+    $('#c-1-1').html(`<button class='btn btn-primary game-choice' data-choice='paper'>Paper</button>`);
+    $('#c-1-2').html(`<button class='btn btn-primary game-choice' data-choice='paper'>Scissors</button>`);
   }
 
   // on submit set the inital values
@@ -160,6 +178,14 @@ $(document).ready(function() {
   $("#start-game").on("click", function(event) {
     startGame();
     setUpGameScreen();
+  });
+
+  $(document).on('click', '.game-choice', function(event) {
+    $('#c-0-1').text($(this).attr('data-choice'));
+    database.ref("/game").once('value', function(snapshot){
+      let snap = snapshot.val();
+      console.log(snap);
+    });
   });
 
 });
