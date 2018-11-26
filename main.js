@@ -189,41 +189,44 @@ $(document).ready(function() {
     $('#c-1-2').html(`<button class='btn btn-primary game-choice' data-choice='scissors'>Scissors</button>`);
   }
 
-  function compareChoices() {
-    console.log(`op: ${opponentMove}`);
+  function compareChoices(yourMove=this.yourMove) {
+    console.log(`yours: ${yourMove}`);
+    let result;
     if (yourMove === 'scissors') {
       if (opponentMove === 'rock') {
-        console.log('you lose');
+        result = 'You lose!';
       } else if (opponentMove === 'paper') {
-        console.log('you win');
+        result = 'You Win!';
       } else if (opponentMove === 'scissors') {
-        console.log('tie!')
+        result = 'Tie!';
       } else {
-        console.log('something went wrong');
+        result = 'something went wrong';
       }
     } else if (yourMove === 'rock') {
       if (opponentMove === 'paper') {
-        console.log('you lose');
+        result = 'You lose!';
       } else if (opponentMove === 'scissors') {
-        console.log('you win');
+        result = 'You Win!';
       } else if (opponentMove === 'rock') {
-        console.log('tie!')
+        result = 'Tie!';
       } else {
-        console.log('something went wrong');
+        result = 'something went wrong';
       }
     } else if (yourMove === 'paper') {
       if (opponentMove === 'scissors') {
-        console.log('you lose');
+        result = 'You lose!';
       } else if (opponentMove === 'rock') {
-        console.log('you win');
+        result = 'You Win!';
       } else if (opponentMove === 'paper') {
-        console.log('tie!')
+        result = 'Tie!';
       } else {
-        console.log('something went wrong');
+        result = 'something went wrong';
       }
     } else {
       console.log('something went wrong with your move');
     }
+  $('#c-0-1').html(`<h1>${result}</h1>`);
+  $(`#c-0-2`).html(`<button class="btn btn-secondary" id="reset-button">Reset</button>`)
   }
 
   // on submit set the inital values
@@ -247,21 +250,25 @@ $(document).ready(function() {
 
   $(document).on('click', '.game-choice', function(event) {
     let choice = $(this).attr('data-choice');
+    console.log(choice);
     database.ref("/game").once('value', function(snapshot){
-      let snap = snapshot.val();
       if (currentlyPlaying && !choiceMade && turn) {
+        yourMove = choice;
         database.ref(`/game/player${player}/move`).set(choice);
         $('#c-0-1').html(`<h1>Waiting...</h1>`);
-        yourMove = choice;
         choiceMade = true;
+        console.log(yourMove);
+        if (player === 2) {
+          compareChoices(yourMove);
+        }
       }
     });
-
+// something is wrong here....
     if (player === 1) {
       database.ref("/game/player2/move").on('value', function(snapshot){
         if (snapshot.val() !== '') {
           opponentMove = snapshot.val();
-          compareChoices();
+          compareChoices(yourMove);
         }
       });
     } else if (player === 2) {
@@ -269,11 +276,25 @@ $(document).ready(function() {
         if (snapshot.val() !== '') {
           console.log('stuff');
           opponentMove = snapshot.val();
-          compareChoices();
+          // compareChoices();
         }
       });
     } else {
       console.log('something went wrong. Try refreshing the page.')
+    }
+  });
+
+  $(document).on('click', '#reset-button', function(event) {
+    $(`#c-0-2`).empty();
+    database.ref("/game/player1/move").set('');
+    database.ref("/game/player2/move").set('');
+    choiceMade = false;
+    if (player === 1) {
+      turn = true;
+      $('#c-0-1').html(`<h1>Your turn!</h1>`);
+    } else {
+      turn = false;
+      $('#c-0-1').html(`<h1>Waiting...</h1>`);
     }
   });
 
