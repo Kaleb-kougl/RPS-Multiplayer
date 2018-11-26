@@ -23,6 +23,8 @@ $(document).ready(function() {
   let turn = false;
   let opponentMove;
   let yourMove;
+  let yourMessage = '';
+  let otherMessage = '';
 
   // DICTATE WHO IS PLAYING
   function setPlayer() {
@@ -88,19 +90,27 @@ $(document).ready(function() {
       if(!snapshot.child('player2').child('turn').exists()){
         database.ref('/game/player2/turn').set(false);
       }
+      if(!snapshot.child('player1').child('message').exists()){
+        database.ref('/game/player1/message').set('');
+      }
+      if(!snapshot.child('player2').child('message').exists()){
+        database.ref('/game/player2/message').set('');
+      }
     } else {
       database.ref("/game").set({
         "player1": {
           name: '',
           move: '',
           userId: '',
-          turn: true
+          turn: true,
+          message: ''
         },
         "player2": {
           name: '',
           move: '',
           userId: '',
-          turn: false
+          turn: false,
+          message: ''
         }
       });
     }
@@ -122,6 +132,7 @@ $(document).ready(function() {
         if (count === 1) {
           database.ref("/game/player1/userId").set(userId);
           database.ref("/game/player2/userId").set('')
+          database.ref('/game/player1/message').set('')
           .then(setPlayer())
         } else {
           setPlayer();
@@ -150,10 +161,12 @@ $(document).ready(function() {
           database.ref("/game/player1/userId").set('');
           database.ref("/game/player1/name").set('');
           database.ref("/game/player1/move").set('');
+          database.ref("/game/player1/message").set('');
         } else if (snap.player2.userId === lostConnectionId) {
           database.ref("/game/player2/userId").set('');
           database.ref("/game/player2/name").set('');
           database.ref("/game/player2/move").set('');
+          database.ref("/game/player2/message").set('');
         }
       });
     // when a player leaves assign someone from queue
@@ -187,6 +200,33 @@ $(document).ready(function() {
     $('#c-1-0').html(`<button class='btn btn-primary game-choice' data-choice='rock'>Rock</button>`);
     $('#c-1-1').html(`<button class='btn btn-primary game-choice' data-choice='paper'>Paper</button>`);
     $('#c-1-2').html(`<button class='btn btn-primary game-choice' data-choice='scissors'>Scissors</button>`);
+    $('#r-2').html(`
+    <div class="col-12" id="messager">
+      <div id="your-message-container">Player1:<span id="your-message"></span>
+      </div>
+      <div id="other-message-container">Player2:<span id="other-message"></span>
+      </div>
+      <form>
+      <input type="text" name="lname" placeholder="message" id="message-text">
+      <input type="submit" value="Submit" id="message-submit">
+      </form>
+    </div>`);
+    database.ref("/game").on('value', function(snapshot){
+      let snap = snapshot.val();
+      if (yourMessage !== snap.player1.message) {
+        let newMessage = snap.player1.message;
+        $('#your-message').text(newMessage);
+      }
+      if (otherMessage !== snap.player2.message) {
+        let newMessage = snap.player2.message;
+        $('#other-message').text(newMessage);
+      }
+    });
+    $(document).on('click', '#message-submit', function(event) {
+      event.preventDefault();
+      let newMessage = $('#message-text').val();
+      database.ref(`/game/player${player}/message`).set(newMessage);
+    })
   }
 
   function compareChoices(yourMove=this.yourMove) {
@@ -286,14 +326,14 @@ $(document).ready(function() {
 
   $(document).on('click', '#reset-button', function(event) {
     $(`#c-0-2`).empty();
-    database.ref("/game/player1/move").set('');
-    database.ref("/game/player2/move").set('');
     choiceMade = false;
     if (player === 1) {
       turn = true;
+      database.ref("/game/player1/move").set('');
       $('#c-0-1').html(`<h1>Your turn!</h1>`);
     } else {
       turn = false;
+      database.ref("/game/player2/move").set('');
       $('#c-0-1').html(`<h1>Waiting...</h1>`);
     }
   });
